@@ -25,7 +25,7 @@ Target "Clean" (fun _ ->
 
 Target "RestorePackages" (fun _ ->
     !! "./**/packages.config"
-    |> Seq.iter (RestorePackage (fun p -> { p with ToolPath = "./.nuget/NuGet.exe" }))
+    |> Seq.iter (RestorePackage (fun p -> { p with ToolPath = "NuGet.exe" }))
 )
 
 // --------------------------------------------------------------------------------------
