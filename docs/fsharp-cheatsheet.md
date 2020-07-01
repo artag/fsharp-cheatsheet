@@ -3,22 +3,22 @@ If you have any comments, corrections, or suggested additions, please open an is
 
 Contents
 --------
-[Comments](#Comments)  
-[Strings](#Strings)  
-[Basic Types and Literals](#BasicTypesAndLiterals)  
-[Loops](#Loops)  
-[Functions](#Functions)  
-[Pattern Matching](#PatternMatching)  
-[Collections](#Collections)  
-[Tuples and Records](#TuplesAndRecords)  
-[Discriminated Unions](#DiscriminatedUnions)  
-[Exceptions](#Exceptions)  
-[Classes and Inheritance](#ClassesAndInheritance)  
-[Interfaces and Object Expressions](#InterfacesAndObjectExpressions)  
-[Active Patterns](#ActivePatterns)  
-[Compiler Directives](#CompilerDirectives)
+* Comments
+* Strings
+* Basic Types and Literals
+* Loops
+* Functions
+* Pattern Matching
+* Collections
+* Tuples and Records
+* Discriminated Unions
+* Exceptions
+* Classes and Inheritance
+* Interfaces and Object Expressions
+* Active Patterns
+* Compiler Directives
 
-<a name="Comments"></a>Comments
+## Comments
 --------
 Block comments are placed between `(*` and `*)`. Line comments start from `//` and continue until the end of the line.
 
@@ -31,7 +31,7 @@ XML doc comments come after `///` allowing us to use XML tags to generate docume
     /// The `let` keyword defines an (immutable) value
     let result = 1 + 1 = 2
 
-<a name="Strings"></a>Strings
+## Strings
 -------
 F# `string` type is an alias for `System.String` type.
 
@@ -54,7 +54,7 @@ We don't even have to escape `"` with *triple-quoted strings*.
          A master limned you in the finest inks\n\
          And with a fresh-cut quill."
 
-<a name="BasicTypesAndLiterals"></a>Basic Types and Literals
+## Basic Types and Literals
 ------------------------
 Most numeric types have associated suffixes, e.g., `uy` for unsigned 8-bit integers and `L` for signed 64-bit integer.
 
@@ -75,7 +75,7 @@ Other common examples are `F` or `f` for 32-bit floating-point numbers, `M` or `
 
 See [Literals (MSDN)](http://msdn.microsoft.com/en-us/library/dd233193.aspx) for complete reference.
 
-<a name="Loops"></a>Loops
+## Loops
 ---------
 
 ### for...in
@@ -117,7 +117,7 @@ See [Literals (MSDN)](http://msdn.microsoft.com/en-us/library/dd233193.aspx) for
         mutVal <- mutVal + 1
     done
 
-<a name="Functions"></a>Functions
+## Functions
 ---------
 The `let` keyword also defines named functions.
 
@@ -163,7 +163,7 @@ The `rec` keyword is used together with the `let` keyword to define a recursive 
        if x = 0 then false
        else even (x - 1)
 
-<a name="PatternMatching"></a>Pattern Matching
+## Pattern Matching
 ----------------
 Pattern matching is often facilitated through `match` keyword.
 
@@ -195,7 +195,7 @@ or implicitly via `function` keyword:
 
 For more complete reference visit [Pattern Matching (MSDN)](http://msdn.microsoft.com/en-us/library/dd547125.aspx).
 
-<a name="Collections"></a>Collections
+## Collections
 -----------
 
 ### Lists
@@ -280,7 +280,7 @@ All these operations are also available for sequences. The added benefits of seq
                 yield i
         }
 
-<a name="TuplesAndRecords"></a>Tuples and Records
+## Tuples and Records
 ------------------
 A *tuple* is a grouping of unnamed but ordered values, possibly of different types:
 
@@ -325,7 +325,7 @@ Records are essentially sealed classes with extra topping: default immutability,
         | { Name = "Paul" } -> true
         | _ -> false
 
-<a name="DiscriminatedUnions"></a>Discriminated Unions
+## Discriminated Unions
 --------------------
 *Discriminated unions* (DU) provide support for values that can be one of a number of named cases, each possibly with different values and types.
 
@@ -355,7 +355,7 @@ Single-case discriminated unions are often used to create type-safe abstractions
     // Use pattern matching to deconstruct single-case DU
     let (Order id) = orderId
 
-<a name="Exceptions"></a>Exceptions
+## Exceptions
 ----------
 The `failwith` function throws an exception of type `Exception`.
 
@@ -388,90 +388,90 @@ The `try/finally` expression enables you to execute clean-up code even if a bloc
        finally
           printfn "Always print this."
 
-<a name="ClassesAndInheritance"></a>Classes and Inheritance
+## Classes and Inheritance
 -----------------------
 This example is a basic class with (1) local let bindings, (2) properties, (3) methods, and (4) static members.
 
-	type Vector(x : float, y : float) =
-		let mag = sqrt(x * x + y * y) // (1)
-	    member this.X = x // (2)
-	    member this.Y = y
-	    member this.Mag = mag
-		member this.Scale(s) = // (3)
-	        Vector(x * s, y * s)
-		static member (+) (a : Vector, b : Vector) = // (4)
-	        Vector(a.X + b.X, a.Y + b.Y)
+    type Vector(x : float, y : float) =
+        let mag = sqrt(x * x + y * y) // (1)
+        member this.X = x // (2)
+        member this.Y = y
+        member this.Mag = mag
+        member this.Scale(s) = // (3)
+            Vector(x * s, y * s)
+        static member (+) (a : Vector, b : Vector) = // (4)
+            Vector(a.X + b.X, a.Y + b.Y)
 
 Call a base class from a derived one.
 
-	type Animal() =
-	    member __.Rest() = ()
-	           
-	type Dog() =
-	    inherit Animal()
-	    member __.Run() =
-	        base.Rest()
+    type Animal() =
+        member __.Rest() = ()
+               
+    type Dog() =
+        inherit Animal()
+        member __.Run() =
+            base.Rest()
 
 *Upcasting* is denoted by `:>` operator.
 
-	let dog = Dog() 
-	let animal = dog :> Animal
+    let dog = Dog() 
+    let animal = dog :> Animal
 
 *Dynamic downcasting* (`:?>`) might throw an `InvalidCastException` if the cast doesn't succeed at runtime.
 
-	let shouldBeADog = animal :?> Dog
+    let shouldBeADog = animal :?> Dog
 
-<a name="InterfacesAndObjectExpressions"></a>Interfaces and Object Expressions
+## Interfaces and Object Expressions
 ---------------------------------
 Declare `IVector` interface and implement it in `Vector'`.
 
-	type IVector =
-	    abstract Scale : float -> IVector
-	
-	type Vector'(x, y) =
-	    interface IVector with
-	        member __.Scale(s) =
-	            Vector'(x * s, y * s) :> IVector
-	    member __.X = x
-	    member __.Y = y
+    type IVector =
+        abstract Scale : float -> IVector
+    
+    type Vector'(x, y) =
+        interface IVector with
+            member __.Scale(s) =
+                Vector'(x * s, y * s) :> IVector
+        member __.X = x
+        member __.Y = y
 
 Another way of implementing interfaces is to use *object expressions*.
 
-	type ICustomer =
-	    abstract Name : string
-	    abstract Age : int
-	
-	let createCustomer name age =
-	    { new ICustomer with
-	        member __.Name = name
-	        member __.Age = age }
+    type ICustomer =
+        abstract Name : string
+        abstract Age : int
+    
+    let createCustomer name age =
+        { new ICustomer with
+            member __.Name = name
+            member __.Age = age }
 
-<a name="ActivePatterns"></a>Active Patterns
+## Active Patterns
 ---------------
 *Complete active patterns*:
 
-	let (|Even|Odd|) i = 
-		if i % 2 = 0 then Even else Odd
-	
-	let testNumber i =
-	    match i with
-	    | Even -> printfn "%d is even" i
-	    | Odd -> printfn "%d is odd" i
+    let (|Even|Odd|) i = 
+        if i % 2 = 0 then Even else Odd
+    
+    let testNumber i =
+        match i with
+        | Even -> printfn "%d is even" i
+        | Odd -> printfn "%d is odd" i
 
 *Parameterized active patterns*:
 
-	let (|DivisibleBy|_|) by n = 
-		if n % by = 0 then Some DivisibleBy else None
-	
-	let fizzBuzz = function 
-	    | DivisibleBy 3 & DivisibleBy 5 -> "FizzBuzz" 
-	    | DivisibleBy 3 -> "Fizz" 
-	    | DivisibleBy 5 -> "Buzz" 
-	    | i -> string i
+    let (|DivisibleBy|_|) by n = 
+        if n % by = 0 then Some DivisibleBy else None
+    
+    let fizzBuzz = function 
+        | DivisibleBy 3 & DivisibleBy 5 -> "FizzBuzz" 
+        | DivisibleBy 3 -> "Fizz" 
+        | DivisibleBy 5 -> "Buzz" 
+        | i -> string i
 
 *Partial active patterns* share the syntax of parameterized patterns but their active recognizers accept only one argument.
 
-<a name="CompilerDirectives"></a>Compiler Directives
+## Compiler Directives
 -------------------
 Load another F# source file into FSI.
 
@@ -479,7 +479,7 @@ Load another F# source file into FSI.
 
 Reference a .NET assembly (`/` symbol is recommended for Mono compatibility).
 
-	#r "../lib/FSharp.Markdown.dll"
+    #r "../lib/FSharp.Markdown.dll"
 
 Include a directory in assembly search paths.
 
