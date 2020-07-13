@@ -226,7 +226,7 @@ A *list* is an immutable collection of elements of the same type.
     // Indexed access using dot
     let first = array1.[0]  
       
-### Sequences
+### Sequences    == IEnumerable in BCL
 A *sequence* is a logical series of elements of the same type. Individual sequence elements are computed only as required, so a sequence can provide better performance than a list in situations in which not all the elements are used.
 
     // Sequences can use yield and contain subsequences
@@ -239,6 +239,89 @@ A *sequence* is a logical series of elements of the same type. Individual sequen
             // "yield!" adds a whole subsequence
             yield! [5..10]
         }
+
+### Mutable Dictionaries (from BCL)
+
+As in C#:
+
+    open System.Collections.Generic
+
+    let inventory = Dictionary<string, float>()
+    inventory.Add("Apples", 0.33)
+    inventory.Remove "Oranges"
+    // Read the value. If not exists - throw exception.
+    let bananas = inventory.["Apples"]
+
+Additional F# syntax:
+
+    // Generic type inference with Dictionary
+    let inventory = Dictionary<_,_>()   // or let inventory = Dictionary()
+    inventory.Add("Apples", 0.33)
+
+### dict     == IDictionary in BCL
+
+*dict* creates immutable dictionaries. Can’t add and remove items to it.
+
+    open System.Collections.Generic
+    let inventory : IDictionary<string, float> =
+        [ "Apples", 0.33; "Oranges", 0.23; "Bananas", 0.45 ]
+        |> dict
+    let bananas = inventory.["Bananas"]     // 0.45
+    inventory.Add("Pineapples", 0.85)       // System.NotSupportedException
+    inventory.Remove("Bananas")             // System.NotSupportedException
+
+Quickly creating full dictionaries:
+
+    [ "Apples", 10; "Bananas", 20; "Grapes", 15 ] |> dict |> Dictionary
+
+### Map
+
+*Map* is an immutable key/value lookup. Allows safely add or remove items.
+
+    let inventory =
+        [ "Apples", 0.33; "Oranges", 0.23; "Bananas", 0.45 ]
+        |> Map.ofList
+    let apples = inventory.["Apples"]
+    let pineapples = inventory.["Pineapples"]   // KeyNotFoundException
+    let newInventory =              // Creates new Map
+        inventory
+        |> Map.add "Pineapples" 0.87
+        |> Map.remove "Apples"
+
+Safely access a key in a *Map* by using *TryFind*. It returns a wrapped option:
+
+    let inventory =
+        [ "Apples", 0.33; "Oranges", 0.23; "Bananas", 0.45 ]
+        |> Map.ofList
+
+    inventory.TryFind "Apples"      // option = Some 0.33
+    inventory.TryFind "Unknown"     // option = None
+
+Useful Map functions:
+
+* map
+* filter
+* iter
+* partition
+
+    let cheapFruit, expensiveFruit =
+        inventory
+        |> Map.partition(fun fruit cost -> cost < 0.3)
+
+### Dictionaries, dict, or Map?
+
+* Use *Map* as your default lookup type:
+    * It’s immutable
+    * Has good support for F# tuples and pipelining.
+
+* Use the *dict* function
+    * Quickly generate an *IDictionary* to interop with BCL code.
+    * To create a full Dictionary.
+
+* Use *Dictionary*:
+    * If need a mutable dictionary.
+    * Need specific performance requirements. (Example: tight loop performing
+    thousands of additions or removals).
 
 ### Higher-order functions on collections
 The same list `[ 1; 3; 5; 7; 9 ]` or array `[| 1; 3; 5; 7; 9 |]` can be generated in various ways.
@@ -669,6 +752,60 @@ returning the items in the group, it returns the number of items in each group.
     // [("London", 2); ("Birnmingham", 1); ("Manchester", 1)]
     persons |> List.countBy (fun person -> person.Town)
 
+### partition (Array, List)
+
+*partition* use predicate and a collection; it returns two collections,
+partitioned based on the predicate:
+
+    // Tupled result in two lists
+    let londonPersons, otherPersons =
+        persons |> List.partition(fun p -> p.Town = "London")
+
+If there are no matches for either half of the split, an empty collection is
+returned for that half.
+
+### chunkBySize (Array, List, Seq)
+
+*chunkBySize* groups elements into arrays (chunks) of a given size.
+
+    let xs = seq [1..8]
+    // seq<int []> = seq [[|1; 2; 3|]; [|4; 5; 6|]; [|7; 8|]
+    let chunked = xs |> Seq.chunkBySize 3
+
+    let list1 = [33; 5; 16]
+    // int list list = [[33; 5]; [16]]
+    let chunkedLst = list1 |> List.chunkBySize 2
+
+    let arr1 = [| "b"; "z"; "f" |]
+    // string [] [] = [|[|"b"; "z"|]; [|"f"|]|]
+    let chunkedArr = arr1 |> Array.chunkBySize 2
+
+### splitAt (Array, List)
+
+*splitAt* splits an Array (List) into two parts at the index you specify.
+The first part ends just before the element at the given index;
+the second part starts with the element at the given index.
+
+    let xs = [| 1; 2; 3; 4; 5 |]
+    let left1, right1 = xs |> Array.splitAt 0   // [||] and [|1; 2; 3; 4; 5|]
+    let left2, right2 = xs |> Array.splitAt 1   // [|1|] and [|2; 3; 4; 5|]
+    let left3, right3 = xs |> Array.splitAt 5   // [|1; 2; 3; 4; 5|] and [||]
+    let left4, right4 = xs |> Array.splitAt 6   // InvalidOperationException
+
+### splitInto (Array, List, Seq)
+
+Splits the input collection into at most count chunks.
+
+    [1..10] |> List.splitInto 3
+    // [[1; 2; 3; 4]; [5; 6; 7]; [8; 9; 10]]
+    // note that the first chunk has four elements
+    
+    [1..10] |> List.splitInto 4
+    // [[1; 2; 3]; [4; 5; 6]; [7; 8]; [9; 10]]
+    
+    [1..10] |> List.splitInto 6
+    // [[1; 2]; [3; 4]; [5; 6]; [7; 8]; [9]; [10]]
+
 ## Array, List and Seq useful functions
 -------------------
 
@@ -746,22 +883,6 @@ and remaining threads can use the cached sequence.
             else
                 None)
         [| 1 .. 10 |])
-
-### chunkBySize (Array, List, Seq)
-
-*chunkBySize* groups elements into arrays (chunks) of a given size.
-
-    let xs = seq [1..8]
-    // seq<int []> = seq [[|1; 2; 3|]; [|4; 5; 6|]; [|7; 8|]
-    let chunked = xs |> Seq.chunkBySize 3
-
-    let list1 = [33; 5; 16]
-    // int list list = [[33; 5]; [16]]
-    let chunkedLst = list1 |> List.chunkBySize 2
-
-    let arr1 = [| "b"; "z"; "f" |]
-    // string [] [] = [|[|"b"; "z"|]; [|"f"|]|]
-    let chunkedArr = arr1 |> Array.chunkBySize 2
 
 ### compareWith (Array, List, Seq)
 
